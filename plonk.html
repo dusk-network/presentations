@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+
+    <title>Dusk Network presents `plonk`</title>
+
+    <meta
+            name="description"
+            content="Learning to appreciate `plonk`"
+    />
+    <meta name="author" content="Eduardo Leegwater Simões"/>
+
+    <meta name="apple-mobile-web-app-capable" content="yes"/>
+    <meta
+            name="apple-mobile-web-app-status-bar-style"
+            content="black-translucent"
+    />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+    <link rel="stylesheet" href="reveal.js/dist/reset.css"/>
+    <link rel="stylesheet" href="reveal.js/dist/reveal.css"/>
+    <link rel="stylesheet" href="css/theme/dusk.css" id="theme"/>
+
+    <!-- Theme used for syntax highlighting of code -->
+    <link rel="stylesheet" href="css/synthwave.css"/>
+</head>
+
+<body>
+<div class="reveal">
+    <!-- Any section element inside of this container is displayed as a slide -->
+    <div class="slides">
+        <section>
+            <h1></h1>
+            <h5>presents</h5>
+            <h3>Learning to appreciate PLONK</h3>
+            <p>
+                <small>
+                    by <a href="https://github.com/ureeves/">Eduardo Leegwater Simões</a>
+                </small>
+            </p>
+        </section>
+
+        <section>
+            <section>
+                <h2>PLONK</h2>
+                <p>A pure Rust implementation of the PLONK proving system over BLS12-381</p>
+            </section>
+
+            <section>
+                <h2>What is PLONK?</h2>
+                <p>
+                    PLONK lets you create and verify <i>zero-knowledge proofs</i> for arbitrary
+                    arithmetic circuits.
+                </p>
+                <p>These circuits are defined by implementing the `Circuit` trait.</p>
+            </section>
+
+            <section>
+                <h2>What are ZKPs?</h2>
+                <p>
+                    Zero-knowledge proofs (ZKPs) or protocols are methods by which one party can
+                    prove to another that they know a value, without conveying any information apart
+                    that they <i>know</i> said value.
+                </p>
+            </section>
+
+            <section>
+                <h2>What are BLS12-381 and JubJub?</h2>
+                <p>BLS12-381 is an elliptic curve construction from the BLS family.</p>
+                <p>JubJub is a twisted Edwards curve defined over the BLS12-381 scalar field.</p>
+            </section>
+        </section>
+
+        <section>
+            <h2>Circuit implementation</h2>
+            <section data-transition="fade-in fade-out">
+                <pre><code class="hljs rust" data-trim>
+                    impl Circuit for MyCircuit {
+                        const CIRCUIT_ID: [u8; 32] = [1u8; 32]; // circuit ID here
+                        fn gadget(
+                            &mut self,
+                            composer: &mut StandardComposer,
+                        ) -> Result<(), Error> {
+                            // use `composer` to define the circuit
+                        }
+
+                        fn padded_circuit_size(&self) -> usize {
+                            // size of the circuit padded to the next power of two
+                        }
+                    }
+                </code></pre>
+            </section>
+
+            <section data-transition="fade-in fade-out">
+                <pre><code class="hljs rust" data-trim>
+                    // 1) a + b = c where C is a Public Input(PI)
+                    // 2) a <= 2^6
+                    // 3) b <= 2^5
+                    // 4) a * b = d where D is a PI
+                    // 5) JubJub::GENERATOR * e(JubJubScalar) = f where F is a PI
+                    pub struct MyCircuit {
+                        a: BlsScalar, // Scalar from the BLS12-381 field
+                        b: BlsScalar,
+                        c: BlsScalar,
+                        d: BlsScalar,
+                        e: JubJubScalar, // Scalar from the JubJub field
+                        f: JubJubAffine, // A point on the JubJub curve
+                    }
+                </code></pre>
+            </section>
+
+            <section data-transition="fade-in fade-out">
+                <pre><code class="hljs rust" data-trim>
+                    fn gadget(
+                        &mut self,
+                        composer: &mut StandardComposer,
+                    ) -> Result<(), Error> {
+                        // Add `a` and `b` as inputs to the circuit.
+                        let a = composer.add_input(self.a);
+                        let b = composer.add_input(self.b);
+
+                        // ..
+                </code></pre>
+            </section>
+
+            <section data-transition="fade-in fade-out">
+                <pre><code class="hljs rust" data-trim>
+                    // 1) a + b = c where C is a Public Input(PI)
+                    composer.poly_gate(
+                        a,
+                        b,
+                        composer.zero_var(),
+                        BlsScalar::zero(), // q_m
+                        BlsScalar::one(),  // q_l
+                        BlsScalar::one(),  // q_r
+                        BlsScalar::zero(), // q_o
+                        BlsScalar::zero(), // q_c
+                        Some(-self.c),     // PI
+                    );
+
+                    // ...
+                </code></pre>
+
+                <p>A width 3 polynomial gate is of the form:</p>
+                <p>(a * b) * q_m + a * q_l + b * q_r + q_c + PI + q_o * c = 0</p>
+            </section>
+
+            <section data-transition="fade-in fade-out">
+                <pre><code class="hljs rust" data-trim>
+                    // 2) a <= 2^6
+                    // 3) b <= 2^5
+                    composer.range_gate(a, 1 << 6);
+                    composer.range_gate(b, 1 << 5);
+
+                    // ...
+                </code></pre>
+            </section>
+
+            <section data-transition="fade-in fade-out">
+                <pre><code class="hljs rust" data-trim>
+                    // 4) a * b = d where D is a PI
+                    composer.poly_gate(
+                        a,
+                        b,
+                        composer.zero_var(),
+                        BlsScalar::one(),
+                        BlsScalar::zero(),
+                        BlsScalar::zero(),
+                        BlsScalar::one(),
+                        BlsScalar::zero(),
+                        Some(-self.d),
+                    );
+
+                    // ...
+                </code></pre>
+            </section>
+
+            <section data-transition="fade-in fade-out">
+                <pre><code class="hljs rust" data-trim>
+                        // ...
+
+                        // 5) JubJub::GENERATOR * e(JubJubScalar) = f where F is a PI
+                        let e = composer.add_input(self.e.into());
+                        let scalar_mul_result = composer
+                            .fixed_base_scalar_mul(e, dusk_jubjub::GENERATOR_EXTENDED);
+                        // Apply the constrain
+                        composer.assert_equal_public_point(scalar_mul_result, self.f);
+                        Ok(())
+                    }
+                </code></pre>
+            </section>
+        </section>
+
+        <section style="text-align: left;">
+            <h1>Questions?</h1>
+            <h3>Thanks!</h3>
+            <p>
+                <small>
+                    <a href="https://github.com/ureeves">Eduardo Leegwter Simões</a> @
+                    <a href="https://dusk.network">Dusk Network</a>
+                </small>
+            </p>
+        </section>
+    </div>
+</div>
+
+<script src="reveal.js/dist/reveal.js"></script>
+
+<script src="reveal.js/plugin/notes/notes.js"></script>
+<script src="reveal.js/plugin/markdown/markdown.js"></script>
+<script src="reveal.js/plugin/highlight/highlight.js"></script>
+
+<script>
+    Reveal.initialize({
+        hash: true,
+        plugins: [RevealMarkdown, RevealHighlight, RevealNotes]
+    });
+</script>
+</body>
+</html>

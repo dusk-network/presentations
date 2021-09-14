@@ -4,3 +4,4 @@ This repository contains presentations using the Dusk theme for
 [reveal.js](https://github.com/hakimel/reveal.js/).
 
 - [Cake](https://dusk-network.github.io/presentations/cake)
+- [Plonk](https://dusk-network.github.io/presentations/plonk)
