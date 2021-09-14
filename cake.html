@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+
+    <title>Dusk Network presents `cake!`</title>
+
+    <meta
+            name="description"
+            content="Writing a Smart Contract is a piece of `cake!`"
+    />
+    <meta name="author" content="Matteo Ferretti"/>
+
+    <meta name="apple-mobile-web-app-capable" content="yes"/>
+    <meta
+            name="apple-mobile-web-app-status-bar-style"
+            content="black-translucent"
+    />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+    <link rel="stylesheet" href="reveal.js/dist/reset.css"/>
+    <link rel="stylesheet" href="reveal.js/dist/reveal.css"/>
+    <link rel="stylesheet" href="css/theme/dusk.css" id="theme"/>
+
+    <!-- Theme used for syntax highlighting of code -->
+    <link rel="stylesheet" href="css/synthwave.css"/>
+</head>
+
+<body>
+<div class="reveal">
+    <!-- Any section element inside of this container is displayed as a slide -->
+    <div class="slides">
+        <section>
+            <h1></h1>
+            <h5>presents</h5>
+            <h3>Fantastic Smart Contracts and how to write them</h3>
+            <p>
+                <small>
+                    by <a href="https://github.com/zer0/">Matteo Ferretti</a>
+                </small>
+            </p>
+        </section>
+
+        <section>
+            <section>
+                <h2>Rusk VM</h2>
+                <p>Powered by</p>
+                <p>
+                    <span class="wa"></span>
+                    <b>+</b>
+                    <span class="rust-logo"></span>
+                </p>
+            </section>
+
+            <section>
+                <h2>Why Rust?</h2>
+                <ul>
+                    <li class="fragment fade-right">Predictable performance</li>
+                    <li class="fragment fade-right">Small code size</li>
+                    <li class="fragment fade-right">
+                        ... basically no garbadge collector
+                    </li>
+                </ul>
+            </section>
+        </section>
+
+        <section>
+            <h2>Example in plain Rust</h2>
+            <pre><code class="hljs rust" data-trim>
+            pub fn call() {
+              let n: i32 = dusk_abi::argument();
+
+              match n {
+                  -2 => {
+                      dusk_abi::delete_storage(b"test");
+                      dusk_abi::ret::&lt;i32&gt;(-2);
+                  }
+                  n if n &gt; 0 => {}
+                  _ => panic!("invalid command"),
+              }
+
+              if n == -1 {
+              } else {
+                  dusk_abi::set_storage(b"test", n);
+                  dusk_abi::ret::&lt;i32&gt;(n);
+              }
+          }</code></pre>
+        </section>
+
+        <section>
+            <p>
+                Writing Smart Contract directly in Rusk is not exactly user-friendly
+            </p>
+            <h2>We can do better</h2>
+        </section>
+
+        <section>
+            <h2>Introducting <code>cake!</code></h2>
+            <p>
+                Cake is a sugared syntax way to write Rusk Smart Contract using Rust
+                Language
+            </p>
+        </section>
+
+        <section>
+            <h2>Why "cake"?</h2>
+            <blockquote cite="https://en.wikipedia.org/wiki/Rusk">
+                &ldquo;In some cultures, rusk is made of cake, rather than bread:
+                this is sometimes referred to as cake rusk.&rdquo;
+            </blockquote>
+        </section>
+
+        <section>
+            <h2>Example in <code>cake!</code></h2>
+            <pre><code class="hljs rust" data-trim>
+            #![no_std]
+            use cake_rusk as cake;
+
+            #[cake::contract(version = "0.0.1")]
+            mod storage {
+                pub fn delete() -> i32 {
+                    dusk_abi::delete_storage(b"test");
+                    -2
+                }
+
+                pub fn set_value(n: i32) -> i32 {
+                    dusk_abi::set_storage(b"test", n);
+                    n
+                }
+            }</code></pre>
+        </section>
+
+        <section>
+            <h2>Advantages</h2>
+
+            <ul>
+                <li class="fragment fade-right">Looks like regular code!</li>
+                <li class="fragment fade-right">Versioning</li>
+                <li class="fragment fade-right">Abstraction over ABI</li>
+                <li class="fragment fade-right">No need to change the VM</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>How to bake a cake (contract)?</h2>
+            <h4 class="fragment fade-in">
+                Obviously there is a <code>cargo bake</code> command!
+            </h4>
+            <h5 class="fragment fade-in">
+                ...but you can also use <code>cargo build</code>
+            </h5>
+        </section>
+
+        <section>
+            <h2>Future plans</h2>
+            <ul>
+                <li class="fragment fade-right">
+                    Abstraction over storage's API (set, list...)
+                </li>
+                <li class="fragment fade-right">
+                    <code>cargo bake</code> will manage contracts dependencies
+                </li>
+                <li class="fragment fade-right">
+                    ... and it could deploy and verify contracts
+                </li>
+            </ul>
+        </section>
+
+        <section style="text-align: left;">
+            <h2>Source Code<br/>&amp; Documentation</h2>
+            <p>
+                - <a href="https://github.com/dusk-network/rusk-vm">rusk-vm</a>
+                <br/>
+                - <a href="https://github.com/dusk-network/cake-rusk">cake-bake</a>
+                <br/>
+                - <a href="https://github.com/dusk-network/cake-rusk">cargo-bake</a>
+            </p>
+        </section>
+
+        <section style="text-align: left;">
+            <h1>Questions?</h1>
+            <h3>Thanks!</h3>
+            <p>
+                <small>
+                    <a href="https://github.com/zer0/">Matteo Ferretti</a> @
+                    <a href="https://dusk.network">Dusk Network</a>
+                </small>
+            </p>
+        </section>
+    </div>
+</div>
+
+<script src="reveal.js/dist/reveal.js"></script>
+
+<script src="reveal.js/plugin/notes/notes.js"></script>
+<script src="reveal.js/plugin/markdown/markdown.js"></script>
+<script src="reveal.js/plugin/highlight/highlight.js"></script>
+
+<script>
+    Reveal.initialize({
+        hash: true,
+        plugins: [RevealMarkdown, RevealHighlight, RevealNotes]
+    });
+</script>
+</body>
+</html>
