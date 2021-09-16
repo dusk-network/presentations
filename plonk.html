@@ -192,12 +192,60 @@
                 </code></pre>
             </section>
 
-            <section>
-                <ul>
-                    <li>Compiling circuit...</li>
-                    <li>Generating proof...</li>
-                    <li>Verifying proof...</li>
-                </ul>
+        </section>
+
+        <section>
+            <h2>Proving and Verifying</h2>
+            <section data-transition="fade-in fade-out">
+                <pre><code class="hljs rust" data-trim>
+                    // Standard reference string (SRS). Normally generated using either a Trusted
+                    // Party or Multiparty Computation.
+                    let pp = PublicParameters::setup(1 << 12, &mut OsRng).unwrap();
+                    // Initialize the circuit
+                    let mut circuit = MyCircuit::default();
+                    // Compile the circuit into a prover key and verifier data. This is an expensive
+                    // process, and should be done only once and then the result reused.
+                    let (pk, vd) = circuit.compile(&pp).unwrap();
+                </code></pre>
+            </section>
+
+            <section data-transition="fade-in fade-out">
+                <pre><code class="hljs rust" data-trim>
+                    // Prover POV
+                    let mut circuit = MyCircuit {
+                        a: BlsScalar::from(20u64),
+                        b: BlsScalar::from(5u64),
+                        c: BlsScalar::from(25u64),
+                        d: BlsScalar::from(100u64),
+                        e: JubJubScalar::from(2u64),
+                        f: JubJubAffine::from(
+                            dusk_jubjub::GENERATOR_EXTENDED * JubJubScalar::from(2u64),
+                        ),
+                    };
+                    let proof = circuit.gen_proof(&pp, &pk, b"Test").unwrap();
+                </code></pre>
+            </section>
+
+            <section data-transition="fade-in fade-out">
+                <pre><code class="hljs rust" data-trim>
+                    // Verifier POV
+                    let public_inputs: Vec&lt;PublicInputValue&gt; = vec![
+                        BlsScalar::from(25u64).into(),
+                        BlsScalar::from(100u64).into(),
+                        JubJubAffine::from(
+                            dusk_jubjub::GENERATOR_EXTENDED * JubJubScalar::from(2u64),
+                        )
+                        .into(),
+                    ];
+                    circuit::verify_proof(
+                        &pp,
+                        &vd.key(),
+                        &proof,
+                        &public_inputs,
+                        &vd.pi_pos(),
+                        b"Test",
+                    ).unwrap();
+                </code></pre>
             </section>
         </section>
 
