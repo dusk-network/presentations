@@ -81,7 +81,7 @@
                         const CIRCUIT_ID: [u8; 32] = [1u8; 32]; // circuit ID here
                         fn gadget(
                             &mut self,
-                            composer: &mut StandardComposer,
+                            composer: &mut TurboComposer,
                         ) -> Result<(), Error> {
                             // use `composer` to define the circuit
                         }
@@ -115,7 +115,7 @@
                 <pre><code class="hljs rust" data-trim>
                     fn gadget(
                         &mut self,
-                        composer: &mut StandardComposer,
+                        composer: &mut TurboComposer,
                     ) -> Result<(), Error> {
                         // Add `a` and `b` as inputs to the circuit.
                         let a = composer.add_input(self.a);
