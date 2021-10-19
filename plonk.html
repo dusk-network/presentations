@@ -29,7 +29,7 @@
 
 <body>
 <div class="reveal">
-    <!-- Any section element inside of this container is displayed as a slide -->
+    <!-- Any section element inside this container is displayed as a slide -->
     <div class="slides">
         <section>
             <h1></h1>
@@ -43,155 +43,214 @@
         </section>
 
         <section>
-            <section>
-                <h2>PLONK</h2>
-                <p>A pure Rust implementation of the PLONK proving system over BLS12-381</p>
-            </section>
+            <h2>Contents</h2>
 
-            <section>
-                <h2>What is PLONK?</h2>
-                <p>
-                    PLONK lets you create and verify <i>zero-knowledge proofs</i> for arbitrary
-                    arithmetic circuits.
-                </p>
-                <p>These circuits are defined by implementing the `Circuit` trait.</p>
-            </section>
+            <ul>
+                <li>What is PLONK?</li>
+                <li>Dusk usage of PLONK</li>
+                <li>Using `dusk_plonk`</li>
+            </ul>
 
-            <section>
-                <h2>What are ZKPs?</h2>
-                <p>
-                    Zero-knowledge proofs (ZKPs) or protocols are methods by which one party can
-                    prove to another that they know a value, without conveying any information apart
-                    that they <i>know</i> said value.
-                </p>
-            </section>
+            <p>
+                <a href="https://dusk-network.github.io/presentations/plonk">https://dusk-network.github.io/presentations/plonk</a>
+            </p>
+        </section>
 
+        <section>
+            <h2>What is PLONK?</h2>
+            <p></p>
             <section>
-                <h2>What are BLS12-381 and JubJub?</h2>
-                <p>BLS12-381 is an elliptic curve construction from the BLS family.</p>
-                <p>JubJub is a twisted Edwards curve defined over the BLS12-381 scalar field.</p>
+                <ol>
+                    <li class="fragment">Set down heavily or carelessly</li>
+                    <li class="fragment">Play unskillfully on a musical instrument</li>
+                    <li class="fragment">Cheap wine of inferior quality</li>
+                    <li class="fragment">
+                        Permutations over Lagrange-bases for Oecumenical
+                        Noninteractive arguments of Knowledge
+                    </li>
+                </ol>
+            </section>
+            <section>
+                <h4>
+                    Alice wants Bob to know that she has the solution to a
+                    problem without sharing said solution.
+                </h4>
+            </section>
+            <section>
+                <div style="display: flex; align-items: center">
+                    <div style="flex: 1">
+                        <img style="background: white; width: 5em" src="img/circuit.png">
+                    </div>
+                    <div style="flex: 2">
+                        <p class="fragment">
+                            <small>
+                                \[\begin{aligned}
+                                (Q_L)a + (Q_R)b + (Q_O)c + (Q_M) a b + Q_C &amp; = 0 \\
+                                \end{aligned} \]
+                            </small>
+                        </p>
+                        <p class="fragment">
+                            <small>
+                                \[\begin{aligned}
+                                x^3 + x + 5 = 35 \\
+                                \end{aligned} \]
+                            </small>
+                        </p>
+                    </div>
+                </div>
             </section>
         </section>
 
         <section>
-            <h2>Circuit implementation</h2>
-            <section data-transition="fade-in fade-out">
-                <pre><code class="hljs rust" data-trim>
-                    impl Circuit for MyCircuit {
-                        const CIRCUIT_ID: [u8; 32] = [1u8; 32]; // circuit ID here
-                        fn gadget(
-                            &mut self,
-                            composer: &mut TurboComposer,
-                        ) -> Result<(), Error> {
-                            // use `composer` to define the circuit
-                        }
+            <h2>Dusk's usage of PLONK</h2>
+            <section>
+                <ul>
+                    <li class="fragment">BidCorrectness</li>
+                    <li class="fragment">BlindBid</li>
+                    <li class="fragment">Transfer</li>
+                </ul>
 
-                        fn padded_circuit_size(&self) -> usize {
-                            // size of the circuit padded to the next power of two
-                        }
-                    }
+                <p></p>
+                <h4 class="fragment">PLONK is at the heart of Dusk Network</h4>
+            </section>
+        </section>
+
+        <section>
+            <h2>Using `dusk_plonk`</h2>
+            <section>
+                <pre><code class="hljs toml" data-trim>
+                    dusk_plonk = {git = "https://github.com/dusk-network/plonk", branch = "add_lookups"}
+                    rand_core = "0.6.3"
                 </code></pre>
             </section>
 
             <section data-transition="fade-in fade-out">
                 <pre><code class="hljs rust" data-trim>
-                    // 1) a + b = c where C is a Public Input(PI)
+                    use dusk_plonk::prelude::*;
+                    use rand_core::OsRng;
+
+                    // Implement a circuit that checks:
+                    // 1) a + b = c where c is a Public Input (PI)
                     // 2) a <= 2^6
                     // 3) b <= 2^5
-                    // 4) a * b = d where D is a PI
-                    // 5) JubJub::GENERATOR * e(JubJubScalar) = f where F is a PI
+                    // 4) a * b = d where d is a PI
+                    // 5) JubJub::GENERATOR * e(JubJubScalar) = f where f is a PI
                     pub struct MyCircuit {
-                        a: BlsScalar, // Scalar from the BLS12-381 field
+                        a: BlsScalar,
                         b: BlsScalar,
                         c: BlsScalar,
                         d: BlsScalar,
-                        e: JubJubScalar, // Scalar from the JubJub field
-                        f: JubJubAffine, // A point on the JubJub curve
+                        e: JubJubScalar,
+                        f: JubJubAffine,
                     }
                 </code></pre>
             </section>
 
-            <section data-transition="fade-in fade-out">
+            <section>
                 <pre><code class="hljs rust" data-trim>
-                    fn gadget(
-                        &mut self,
-                        composer: &mut TurboComposer,
-                    ) -> Result<(), Error> {
+                    pub trait Circuit where Self: Sized {
+                        /// Circuit identifier.
+                        const CIRCUIT_ID: [u8; 32];
+
+                        /// Gadget implementation used to fill the composer.
+                        fn gadget(&mut self, composer: &mut TurboComposer) -> Result<(), Error>;
+
+                        /// Return list of public inputs generated by the gadget.
+                        fn public_inputs(&self) -> Vec&lt;PublicInputValue&gt;;
+
+                        /// Returns the circuit size padded to the next power of two.
+                        fn padded_gates(&self) -> usize;
+
+                        //...provided methods...
+                    }
+                </code></pre>
+            </section>
+
+            <section>
+                <pre><code class="hljs rust" data-trim>
+                    impl Circuit for MyCircuit {
+                        const CIRCUIT_ID = [0u8; 32];
+
+                        fn public_inputs(&self) -> Vec&lt;PublicInputValue&gt; {
+                            vec![self.c.into(), self.d.into(), self.f.into()]
+                        }
+
+                        //...
+                </code></pre>
+            </section>
+
+            <section>
+                <pre><code class="hljs rust" data-trim>
+                    fn gadget(&mut self, composer: &mut TurboComposer) -> Result<(), Error> {
                         // Add `a` and `b` as inputs to the circuit.
-                        let a = composer.add_input(self.a);
-                        let b = composer.add_input(self.b);
+                        let a = composer.append_witness(self.a);
+                        let b = composer.append_witness(self.b);
 
-                        // ..
+                        // 1) a + b = c where C is a Public Input(PI)
+                        let constraint = Constraint::new()
+                            .left(1)
+                            .right(1)
+                            .public(-self.c)
+                            .a(a)
+                            .b(b);
+
+                        composer.append_gate(constraint);
+
+                        // ...
                 </code></pre>
             </section>
-
-            <section data-transition="fade-in fade-out">
-                <pre><code class="hljs rust" data-trim>
-                    // 1) a + b = c where C is a Public Input(PI)
-                    composer.poly_gate(
-                        a,
-                        b,
-                        composer.zero_var(),
-                        BlsScalar::zero(), // q_m
-                        BlsScalar::one(),  // q_l
-                        BlsScalar::one(),  // q_r
-                        BlsScalar::zero(), // q_o
-                        BlsScalar::zero(), // q_c
-                        Some(-self.c),     // PI
-                    );
-
-                    // ...
-                </code></pre>
-
-                <p>A width 3 polynomial gate is of the form:</p>
-                <p>(a * b) * q_m + a * q_l + b * q_r + q_c + PI + q_o * c = 0</p>
-            </section>
-
-            <section data-transition="fade-in fade-out">
-                <pre><code class="hljs rust" data-trim>
-                    // 2) a <= 2^6
-                    // 3) b <= 2^5
-                    composer.range_gate(a, 1 << 6);
-                    composer.range_gate(b, 1 << 5);
-
-                    // ...
-                </code></pre>
-            </section>
-
-            <section data-transition="fade-in fade-out">
-                <pre><code class="hljs rust" data-trim>
-                    // 4) a * b = d where D is a PI
-                    composer.poly_gate(
-                        a,
-                        b,
-                        composer.zero_var(),
-                        BlsScalar::one(),
-                        BlsScalar::zero(),
-                        BlsScalar::zero(),
-                        BlsScalar::one(),
-                        BlsScalar::zero(),
-                        Some(-self.d),
-                    );
-
-                    // ...
-                </code></pre>
-            </section>
-
-            <section data-transition="fade-in fade-out">
+            <section>
                 <pre><code class="hljs rust" data-trim>
                         // ...
 
-                        // 5) JubJub::GENERATOR * e(JubJubScalar) = f where F is a PI
-                        let e = composer.add_input(self.e.into());
-                        let scalar_mul_result = composer
-                            .fixed_base_scalar_mul(e, dusk_jubjub::GENERATOR_EXTENDED);
-                        // Apply the constrain
-                        composer.assert_equal_public_point(scalar_mul_result, self.f);
-                        Ok(())
+                        // 2) a <= 2^6
+                        // 3) b <= 2^5
+                        composer.component_range(a, 1 << 6);
+                        composer.component_range(b, 1 << 5);
+
+                        //...
+                </code></pre>
+            </section>
+            <section>
+                <pre><code class="hljs rust" data-trim>
+                        // ...
+
+                        // 4) a * b = d where D is a PI
+                        let constraint = Constraint::new()
+                            .mult(1)
+                            .output(1)
+                            .public(-self.d)
+                            .a(a)
+                            .b(b);
+
+                        composer.append_gate(constraint);
+
+                        //...
+                </code></pre>
+            </section>
+            <section>
+                <pre><code class="hljs rust" data-trim>
+                            // ...
+
+                            let e = composer.append_witness(self.e);
+
+                            // 5) JubJub::GENERATOR * e(JubJubScalar) = f where F is a PI
+                            let scalar_mul_result =
+                                composer.component_mul_generator(
+                                    e, dusk_jubjub::GENERATOR_EXTENDED,
+                                );
+                            composer
+                                .assert_equal_public_point(scalar_mul_result, self.f);
+
+                            Ok(())
+                        }
+
+                        fn padded_gates(&self) -> usize {
+                            1 << 11
+                        }
                     }
                 </code></pre>
             </section>
-
         </section>
 
         <section>
@@ -212,17 +271,20 @@
             <section data-transition="fade-in fade-out">
                 <pre><code class="hljs rust" data-trim>
                     // Prover POV
-                    let mut circuit = MyCircuit {
-                        a: BlsScalar::from(20u64),
-                        b: BlsScalar::from(5u64),
-                        c: BlsScalar::from(25u64),
-                        d: BlsScalar::from(100u64),
-                        e: JubJubScalar::from(2u64),
-                        f: JubJubAffine::from(
-                            dusk_jubjub::GENERATOR_EXTENDED * JubJubScalar::from(2u64),
-                        ),
-                    };
-                    let proof = circuit.gen_proof(&pp, &pk, b"Test").unwrap();
+                    let proof = {
+                        let mut circuit = TestCircuit {
+                            a: BlsScalar::from(20u64),
+                            b: BlsScalar::from(5u64),
+                            c: BlsScalar::from(25u64),
+                            d: BlsScalar::from(100u64),
+                            e: JubJubScalar::from(2u64),
+                            f: JubJubAffine::from(
+                                dusk_jubjub::GENERATOR_EXTENDED * JubJubScalar::from(2u64),
+                            ),
+                        };
+
+                        circuit.prove(&pp, &pk, b"test_transcript").unwrap()
+                    }?;
                 </code></pre>
             </section>
 
@@ -237,35 +299,32 @@
                         )
                         .into(),
                     ];
-                    circuit::verify_proof(
+
+                    TestCircuit::verify(
                         &pp,
-                        &vd.key(),
+                        &vd,
                         &proof,
                         &public_inputs,
-                        &vd.pi_pos(),
-                        b"Test",
-                    ).unwrap();
+                        b"test_transcript",
+                    ).unwrap()
                 </code></pre>
             </section>
         </section>
 
         <section>
-            <h2>Gates</h2>
-            <section data-transition="fade-in fade-out">
-                <h3>What kind of gates are available?</h3>
-            </section>
-            <section data-transition="fade-in fade-out">
-                <ul>
-                    <li class="fragment">Boolean</li>
-                    <li class="fragment">Addition</li>
-                    <li class="fragment">Multiplication</li>
-                    <li class="fragment">Point addition</li>
-                    <li class="fragment">XOR</li>
-                    <li class="fragment">AND</li>
-                    <li class="fragment">Range</li>
-                    <li class="fragment">Lookup gate (yay plonkup)</li>
-                </ul>
-            </section>
+            <h2>Components</h2>
+            <h3>What kind of gates are available?</h3>
+
+            <ul>
+                <li class="fragment">Boolean</li>
+                <li class="fragment">Addition</li>
+                <li class="fragment">Multiplication</li>
+                <li class="fragment">Point addition</li>
+                <li class="fragment">XOR</li>
+                <li class="fragment">AND</li>
+                <li class="fragment">Range</li>
+                <li class="fragment">Lookup gate (yay plonkup)</li>
+            </ul>
         </section>
 
         <section style="text-align: left;">
@@ -286,11 +345,17 @@
 <script src="reveal.js/plugin/notes/notes.js"></script>
 <script src="reveal.js/plugin/markdown/markdown.js"></script>
 <script src="reveal.js/plugin/highlight/highlight.js"></script>
+<script src="reveal.js/plugin/math/math.js"></script>
 
 <script>
     Reveal.initialize({
         hash: true,
-        plugins: [RevealMarkdown, RevealHighlight, RevealNotes]
+        math: {
+            mathjax: 'https://cdn.jsdelivr.net/gh/mathjax/mathjax@2.7.8/MathJax.js',
+            config: 'TeX-AMS_HTML-full',
+            TeX: {Macros: {RR: "{\\bf R}"}}
+        },
+        plugins: [RevealMarkdown, RevealMath, RevealHighlight, RevealNotes]
     });
 </script>
 </body>
