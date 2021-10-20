@@ -135,6 +135,7 @@
                     // 3) b <= 2^5
                     // 4) a * b = d where d is a PI
                     // 5) JubJub::GENERATOR * e(JubJubScalar) = f where f is a PI
+                    #[derive(Default)]
                     pub struct MyCircuit {
                         a: BlsScalar,
                         b: BlsScalar,
